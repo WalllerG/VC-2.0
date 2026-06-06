@@ -103,29 +103,95 @@ body::before {
 }
 
 .primary-button{
-    background-color: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(255, 255, 255, 0.05);
     border-radius: 50%;
-    border: 2px solid grey;
+    border: 2px solid rgba(255, 255, 255, 0.35);
     width: 160px;
     height: 160px;
     backdrop-filter: blur(4px);
+    cursor: pointer;
+    /* animate shape + colour changes so the circle->square recording state morphs smoothly */
+    transition: background-color 0.3s ease, border-color 0.3s ease,
+                border-radius 0.35s ease, box-shadow 0.3s ease, transform 0.15s ease;
 }
 
 .primary-button:hover{
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: rgba(255, 255, 255, 0.12);
     border-color: white;
-    cursor: pointer;   
 }
 
 .primary-button:active{
-    background-color: rgb(255, 0, 0);
-    border-color: white;
-    box-shadow: rgba(255, 75, 75, 0.644) 0px 0px 10px, rgb(255, 138, 138) 0px 0px 20px, rgba(250, 75, 75, 0.714) 0px 0px 30px;
+    transform: scale(0.96);
+}
+
+/* ===== RECORDING STATE ===== */
+/* While the browser is listening, the mic button morphs into a glowing red
+   square so it's obvious recording is in progress. Removing the class restores
+   the normal circular button. */
+.primary-button.recording{
+    background-color: rgb(220, 38, 38);
+    border-color: rgba(255, 138, 138, 0.9);
+    border-radius: 28px;
+    animation: recordPulse 1.4s ease-in-out infinite;
+}
+
+.primary-button.recording .button-icon{
+    /* render the mic icon in white-ish tone while recording */
+    filter: brightness(0) invert(1);
+}
+
+@keyframes recordPulse {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.55);
+        transform: scale(1);
+    }
+    50% {
+        box-shadow: 0 0 0 22px rgba(220, 38, 38, 0);
+        transform: scale(1.06);
+    }
 }
 
 .button-icon{
     width: 80px;
     height: 80px;
+}
+
+/* ===== CALENDAR VERIFY BUTTON ===== */
+.calendar-button{
+    display: none; /* shown by script.js once the session is confirmed */
+    align-items: center;
+    gap: 10px;
+    margin-top: 1.5rem;
+    padding: 12px 22px;
+    border-radius: 9999px;
+    background-color: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(4px);
+    color: rgba(255, 255, 255, 0.92);
+    font-size: 15px;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    animation-name: fadeInUp;
+    animation-duration: 1.5s;
+}
+
+.calendar-button:hover{
+    background-color: rgba(255, 255, 255, 0.22);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: translateY(-1px);
+}
+
+.calendar-dot{
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background-color: #34d399;
+    box-shadow: 0 0 8px #34d399;
 }
 
 .container-desc2{
@@ -145,25 +211,24 @@ body::before {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 12px 12px;
+    padding: 14px 24px;
     border-radius: 9999px;
     background-color: rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(4px);
     border: 1px solid rgba(255, 255, 255, 0.2);
-    width: 250px;
-    height: 20px;
+    min-width: 250px;
+    max-width: 80vw;
+    text-align: center;
     animation-name: fadeIn;
     animation-duration: 4s;
 }
 
 #status{
-    color: rgba(255, 255, 255, 0.6);
+    color: rgba(255, 255, 255, 0.75);
     font-size: 15px;
-    line-height: 1.25rem;
-    margin-top: 3rem;
-    margin-bottom: 3rem;
+    line-height: 1.4;
+    margin: 0;
     font-weight: 300;
-
 }
 
 @keyframes playfulBounce {

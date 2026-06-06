@@ -122,7 +122,7 @@ def callback(request: Request):
     db.commit()
 
     request.session["email"] = email
-    return RedirectResponse(f"{FRONTEND_URL}/homepage.html")
+    return RedirectResponse(f"{FRONTEND_URL}/index.html")
 
 # create event for logged in user
 @app.post("/create-event")

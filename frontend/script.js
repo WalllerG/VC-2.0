@@ -1,3 +1,17 @@
+const voiceButton = document.getElementById("voicepage");
+voiceButton.addEventListener("click", ()=> {
+    window.location.href = "index.html";
+});
+
+const homeButton = document.getElementById("homepage");
+homeButton.addEventListener("click", ()=> {
+    window.location.href = "homepage.html"; 
+  });
+
+
+
+
+
 // API base: during local dev the frontend runs on Live Server (:5500) while the
 // backend runs on :8000. In production both are served from the same origin, so
 // an empty string (relative URLs) is correct.
@@ -55,6 +69,7 @@ window.onload = async () => {
         document.getElementById("micButton").onclick = () => {
             if (recognition) {
                 recognition.start()
+                document.querySelector('.container-desc').innerText = "Listening..."
             } else {
                 document.getElementById("status").innerText = "Please use Chrome or Edge"
             }

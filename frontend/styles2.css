@@ -3,11 +3,10 @@ body{
     padding: 0;
     background-image: url(components/Earth-wallpaper.png);
     background-size: cover;
-    background-position: center;
-    min-height: 100vh;
-    overflow: hidden;
-    
-    
+    background-position: end; 
+    height: 100%;
+    overflow-y: auto; 
+    overflow-x: hidden;
 }
 
 body::before {
@@ -42,13 +41,21 @@ body::before {
 .top-bar-btn{
     background-color: transparent;
     border: none;
-    color: white;
+    color: rgba(255, 255, 255, 0.809);
     font-size: 16px;
     margin-right: 20px;
     cursor: pointer;
     padding: 8px 16px;        
     letter-spacing: 0.2em;         
-    transition: all 0.3s ease;   
+    transition: all 0.3s ease;  
+    animation-name: fadeInUp;
+    animation-duration: 3s; 
+}
+
+#homepage{
+    color: white;
+    font-weight: 800;
+
 }
 
 
@@ -59,17 +66,172 @@ body::before {
 
 .main-container{
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
     justify-self: center;
     margin-top: 110px;
     width: 100vw;
-    height: 100vh;
+    height: 87vh;
     font-family: Arial, sans-serif;
     background-color: transparent;
     backdrop-filter: blur(4px);  /* Try change here  (delete or change the px)*/
     border: 2px solid transparent;
 }
+
+.intro-container{
+    background-color: transparent;
+    padding-left: 7%;
+    padding-bottom: 10%;
+    text-align: justify;
+    align-items: center;
+}
+
+.intro-welcome{
+    color: rgba(255, 255, 255, 0.6);
+    letter-spacing: 0.35em;
+    font-size: 20px;
+    animation-name: fadeInLeft;
+    animation-duration: 3s;
+    
+}
+
+.container-title{
+    color: white;
+    font-size: 96px; 
+    font-weight: 300;
+    letter-spacing: 0.025em; 
+    margin-top: 10px;
+    margin-bottom: 32px; 
+    font-family: Georgia, 'Times New Roman', Times, serif; 
+    font-style: italic;
+    animation-name: fadeIn;
+    animation-duration: 5s;
+}
+
+.container-desc{
+    color: rgba(255, 255, 255, 0.7); 
+    font-size: 1rem; 
+    line-height: 1.625; 
+    max-width: 448px; 
+    margin-bottom: 2rem; 
+    font-weight: 200;
+    animation-name: fadeInRight;
+    animation-duration: 2s;
+}
+
+#loginButton{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 12px;
+    border-radius: 9999px;
+    background-color: rgba(255, 255, 255, 0.229);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    width: 250px;
+    height: 50px;
+    font-size: 20px;
+    color: white;
+    cursor: pointer;
+    margin-top: 50px;
+    margin-left: 15%;
+    font-family:Verdana, Geneva, Tahoma, sans-serif;
+    animation-name: fadeInUpExtra;
+    animation-duration: 4s;
+
+}
+
+#loginButton:hover{
+    background-color: rgba(255, 255, 255, 0.4);
+    border-color: rgba(255, 255, 255, 0.4);
+    font-weight: 600;
+
+
+}
+
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.05);
+        opacity: 0.8;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes fadeInRight {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+
+@keyframes fadeInUpExtra{
+    from {
+        opacity: 0;
+        transform: translateY(40px);
+    }
+
+    to{
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+    
 
 
 

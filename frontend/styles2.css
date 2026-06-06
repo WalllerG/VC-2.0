@@ -1,0 +1,76 @@
+body{
+    margin: 0;
+    padding: 0;
+    background-image: url(components/Earth-wallpaper.png);
+    background-size: cover;
+    background-position: center;
+    min-height: 100vh;
+    overflow: hidden;
+    
+    
+}
+
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(38, 38, 38, 0.4); 
+    pointer-events: none;
+    z-index: 0;
+}
+
+.top-bar, .main-container {
+    position: relative;
+    z-index: 1;
+}
+
+.top-bar{
+    background-color: transparent;
+    width: 100%;
+    height: 80px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.top-bar-btn{
+    background-color: transparent;
+    border: none;
+    color: white;
+    font-size: 16px;
+    margin-right: 20px;
+    cursor: pointer;
+    padding: 8px 16px;        
+    letter-spacing: 0.2em;         
+    transition: all 0.3s ease;   
+}
+
+
+.top-bar-btn:hover {
+    opacity: 0.8;
+    letter-spacing: 0.25em;
+}
+
+.main-container{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-self: center;
+    margin-top: 110px;
+    width: 100vw;
+    height: 100vh;
+    font-family: Arial, sans-serif;
+    background-color: transparent;
+    backdrop-filter: blur(4px);  /* Try change here  (delete or change the px)*/
+    border: 2px solid transparent;
+}
+
+
+
+

@@ -4,6 +4,7 @@ body{
     background-image: url(components/Earth-wallpaper.png);
     background-size: cover;
     background-position: center;
+    overflow: hidden;
     
 }
 

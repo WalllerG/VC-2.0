@@ -1,4 +1,4 @@
-// ===== TOP-BAR NAVIGATION =====
+// TOP-BAR NAVIGATION 
 const voiceButton = document.getElementById("voicepage");
 if (voiceButton) {
     voiceButton.addEventListener("click", () => {
@@ -33,8 +33,7 @@ if (SpeechRecognition) {
     recognition.interimResults = false;
     recognition.lang = 'en-US';
 
-    // Recording animation: turn the mic button into a pulsing red square while
-    // the browser is actively listening, and restore it when listening stops.
+    // Recording animation
     recognition.onstart = () => {
         isRecording = true;
         document.getElementById("micButton")?.classList.add("recording");
@@ -75,7 +74,7 @@ if (SpeechRecognition) {
     };
 }
 
-// ===== LOGIN / SESSION CHECK =====
+// LOGIN / SESSION CHECK
 window.onload = async () => {
     let data = { loggedIn: false };
     try {
@@ -88,9 +87,6 @@ window.onload = async () => {
     // ---- Homepage (landing) ----
     const loginButton = document.getElementById("loginButton");
     if (loginButton) {
-        // Don't force-redirect logged-in users away from the homepage; that's
-        // what made the "Home" link bounce straight back to the app. Instead,
-        // "Get Started" decides where to go on click.
         loginButton.onclick = () => {
             if (data.loggedIn) {
                 window.location.href = "index.html";   // already signed in → app
@@ -100,7 +96,7 @@ window.onload = async () => {
         };
     }
 
-    // ---- Voice page (app) ----
+    // Voice page (app)
     const micButton = document.getElementById("micButton");
     if (micButton) {
         if (!data.loggedIn) {

@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: voicecal
+    runtime: python
+    rootDir: backend
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      # FRONTEND_URL = "" means "redirect to this same site" after login.
+      - key: FRONTEND_URL
+        value: ""
+      # A strong random session-signing key, generated once by Render.
+      - key: SECRET_KEY
+        generateValue: true
+      # Paste your Claude API key in the Render dashboard (kept out of git).
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      # Postgres connection string, wired automatically from the database below.
+      - key: DATABASE_URL
+        fromDatabase:
+          name: voicecal-db
+          property: connectionString
+
+databases:
+  - name: voicecal-db
+    plan: free

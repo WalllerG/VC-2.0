@@ -22,6 +22,7 @@ const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecogni
 
 let recognition = null;
 let isRecording = false;
+let gotResult = false;   // did the last session actually capture speech?
 
 function setStatus(message) {
     const status = document.getElementById("status");
@@ -36,6 +37,7 @@ if (SpeechRecognition) {
     // Recording animation
     recognition.onstart = () => {
         isRecording = true;
+        gotResult = false;
         document.getElementById("micButton")?.classList.add("recording");
         setStatus("Listening...");
     };
@@ -43,15 +45,30 @@ if (SpeechRecognition) {
     recognition.onend = () => {
         isRecording = false;
         document.getElementById("micButton")?.classList.remove("recording");
+        // If recording ended without capturing any speech, don't leave the
+        // status stuck on "Listening...".
+        if (!gotResult) {
+            setStatus("Didn't catch that — tap to try again");
+        }
     };
 
     recognition.onerror = (event) => {
         isRecording = false;
+        gotResult = true;   // error is a terminal state; onend shouldn't override it
         document.getElementById("micButton")?.classList.remove("recording");
-        setStatus(`Mic error: ${event.error}`);
+        if (event.error === "no-speech") {
+            setStatus("No speech detected — tap to try again");
+        } else if (event.error === "not-allowed") {
+            setStatus("Mic access blocked — allow it in your browser settings");
+        } else if (event.error === "aborted") {
+            setStatus("Ready when you are");
+        } else {
+            setStatus(`Mic error: ${event.error}`);
+        }
     };
 
     recognition.onresult = async (event) => {
+        gotResult = true;
         const text = event.results[0][0].transcript;
         setStatus(`You said: "${text}"`);
 

@@ -136,8 +136,12 @@ def create_event(request: Request, body: EventRequest):
     creds = Credentials.from_authorized_user_info(json.loads(user.token))
 
     try:
-        service = build("calendar", "v3", credentials=creds)
         event_data = parse_speech_to_event(body.text)
+        # The parser flags speech that isn't about scheduling so don't create
+        # junk calendar events from small talk or unrelated comments.
+        if event_data.get("not_event"):
+            return {"status": "ignored", "message": "That didn't sound like an event."}
+        service = build("calendar", "v3", credentials=creds)
         event = service.events().insert(calendarId='primary', body=event_data).execute()
         return {"status": "created", "link": event.get('htmlLink')}
     except HttpError as error:

@@ -18,9 +18,18 @@ def parse_speech_to_event(text: str):
                 "content": f"""Parse this into a Google Calendar event JSON.
                 Today is {datetime.date.today()}.
                 Timezone is America/Toronto.
-                
-                Return ONLY valid JSON, nothing else. Include only the fields that are relevant based on what the user said.
-                
+
+                Return ONLY valid JSON, nothing else.
+
+                FIRST decide whether the user is actually asking to schedule or create
+                a calendar event/reminder. Speech that is small talk, a question, a
+                random comment, or otherwise has nothing to do with scheduling an event
+                is NOT an event. If it is NOT an event, return exactly:
+                {{"not_event": true}}
+
+                Only if it IS an event, return the event JSON below.
+                Include only the fields that are relevant based on what the user said.
+
                 Possible fields:
                 - summary: event title (always required)
                 - location: physical address or place name (if mentioned)

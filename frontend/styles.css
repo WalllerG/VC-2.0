@@ -1,3 +1,6 @@
+/* ===== VOICE PAGE (index.html) =====
+   Shared layout, top bar and animations live in shared.css. */
+
 body{
     margin: 0;
     padding: 0;
@@ -5,52 +8,6 @@ body{
     background-size: cover;
     background-position: center;
     overflow: hidden;
-    
-    
-}
-
-body::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(38, 38, 38, 0.4); 
-    pointer-events: none;
-    z-index: 0;
-    
-}
-
-.top-bar, .main-container {
-    position: relative;
-    z-index: 1;
-}
-
-.top-bar{
-    background-color: transparent;
-    width: 100%;
-    height: 80px;
-    position: fixed;
-    top: 0;
-    left: 0;
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-}
-
-.top-bar-btn{
-    background-color: transparent;
-    border: none;
-    color: rgba(255, 255, 255, 0.809);
-    font-size: 16px;
-    margin-right: 20px;
-    cursor: pointer;
-    padding: 8px 16px;        
-    letter-spacing: 0.2em;         
-    transition: all 0.3s ease;  
-    animation-name: fadeInUp;
-    animation-duration: 3s; 
 }
 
 #voicepage{
@@ -58,26 +15,9 @@ body::before {
     font-weight: 800;
 }
 
-
-.top-bar-btn:hover {
-    opacity: 0.8;
-    letter-spacing: 0.25em;
-}
-
-
-
 .main-container{
-    display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-self: center;
-    margin-top: 110px;
-    width: 100vw;
     height: 80vh;
-    font-family: Arial, sans-serif;
-    background-color: transparent;
-    backdrop-filter: blur(4px);  /* Try change here  (delete or change the px)*/
-    border: 2px solid transparent;
 }
 
 .container-title{
@@ -86,11 +26,10 @@ body::before {
     line-height: 1;
     font-weight: 300;
     letter-spacing: 0.025em;
-    margin-bottom: 1rem;  
+    margin-bottom: 1rem;
     font-family: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
     animation-name: fadeIn;
     animation-duration: 2s;
-
 }
 
 .container-desc{
@@ -203,9 +142,7 @@ body::before {
     font-weight: 300;
     animation-name: fadeInUp;
     animation-duration: 1s;
-
 }
-
 
 .speech-container{
     display: flex;
@@ -230,102 +167,3 @@ body::before {
     margin: 0;
     font-weight: 300;
 }
-
-@keyframes playfulBounce {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  40% {
-    transform: translateY(-16px);
-  }
-  60% {
-    transform: translateY(-8px);
-  }
-}
-
-@keyframes pulse {
-    0% {
-        transform: scale(1);
-        opacity: 1;
-    }
-    50% {
-        transform: scale(1.05);
-        opacity: 0.8;
-    }
-    100% {
-        transform: scale(1);
-        opacity: 1;
-    }
-}
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-    }
-    to {
-        opacity: 1;
-    }
-}
-
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-@keyframes fadeInLeft {
-    from {
-        opacity: 0;
-        transform: translateX(-20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
-}
-
-@keyframes fadeInRight {
-    from {
-        opacity: 0;
-        transform: translateX(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
-}
-
-
-@keyframes fadeInUpExtra{
-    from {
-        opacity: 0;
-        transform: translateY(40px);
-    }
-
-    to{
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-
-@keyframes fadeInDown {
-    from {
-        opacity: 0;
-        transform: translateY(-20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-    
-
-
-
-

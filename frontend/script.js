@@ -1,53 +1,63 @@
-const homeButton = document.getElementById("home-btn");
+// API base: during local dev the frontend runs on Live Server (:5500) while the
+// backend runs on :8000. In production both are served from the same origin, so
+// an empty string (relative URLs) is correct.
+const API = (location.port === "5500") ? "http://127.0.0.1:8000" : ""
 
-homeButton.addEventListener('click', () => {
-   window.location.href = "homepage.html";
-});  
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
 
-// Added event listener to the home button to navigate back to homepage.html but MOVE IT LATER TO SCRIPT2.JS
+let recognition = null
 
-const speechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+if (SpeechRecognition) {
+    recognition = new SpeechRecognition()
+    recognition.interimResults = false
+    recognition.lang = 'en-US'
 
-if (!speechRecognition) {
-    alert("Your browser does not support Speech Recognition. Please use a compatible browser.");
+    recognition.onresult = async (event) => {
+        const text = event.results[0][0].transcript
+        document.getElementById("status").innerText = `You said: ${text}`
+        
+        const response = await fetch(`${API}/create-event`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ text: text })
+        })
+        
+        const data = await response.json()
+        document.getElementById("status").innerText = "✅ Event created!"
+    }
 }
 
-const recognition = new speechRecognition();
-let isListening = false;
-
-recognition.continuous = false;
-recognition.lang = 'en-US';
-recognition.interimResults = false;
-recognition.maxAlternatives = 1;
-
-const startBtn = document.querySelector('.primary-button');
-
-startBtn.addEventListener('click', ()=>{
-    if(isListening) {
-        recognition.stop();
-        isListening = false;
-
-    } else{
-        recognition.start();
-        isListening = true;
-    }
-});
-
-
-recognition.onresult = async (event) => {
-    const text = event.results[0][0].transcript
-    console.log("You said:", text)
-    
-    // send to FastAPI
-    const response = await fetch("http://localhost:8000/create-event", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ text: text })
+// ===== LOGIN / SESSION CHECK =====
+window.onload = async () => {
+    const res = await fetch(`${API}/me`, {
+        credentials: "include"
     })
-  
-    const data = await response.json()
-    // show confirmation to user
-    document.getElementById("status").innerText = "Event created!"
-  }
+    const data = await res.json()
+    
+    // login page
+    if (document.getElementById("loginButton")) {
+        if (data.loggedIn) {
+            window.location.href = "index.html"
+        }
+        document.getElementById("loginButton").onclick = () => {
+            window.location.href = `${API}/login`
+        }
+    }
+
+    // voice page
+    if (document.getElementById("micButton")) {
+        if (!data.loggedIn) {
+            window.location.href = "homepage.html"
+        }
+        document.getElementById("status").innerText = `Logged in as ${data.email}`
+        
+        document.getElementById("micButton").onclick = () => {
+            if (recognition) {
+                recognition.start()
+            } else {
+                document.getElementById("status").innerText = "Please use Chrome or Edge"
+            }
+        }
+    }
+}

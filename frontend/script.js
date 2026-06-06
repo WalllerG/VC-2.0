@@ -5,6 +5,7 @@ if (!speechRecognition) {
 }
 
 const recognition = new speechRecognition();
+let isListening = false;
 
 recognition.continuous = false;
 recognition.lang = 'en-US';
@@ -15,7 +16,14 @@ const startBtn = document.querySelector('.primary-button');
 const descriptionElement = document.querySelector('.container-desc3');
 
 startBtn.addEventListener('click', ()=>{
-    recognition.start();
+    if(isListening) {
+        recognition.stop();
+        isListening = false;
+
+    } else{
+        recognition.start();
+        isListening = true;
+    }
 });
 
 
@@ -24,4 +32,3 @@ recognition.onresult = (event) => {
     descriptionElement.innerHTML = `"${spokenText}"`;
 
 };
-

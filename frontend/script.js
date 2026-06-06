@@ -6,7 +6,7 @@ voiceButton.addEventListener("click", ()=> {
 const homeButton = document.getElementById("homepage");
 homeButton.addEventListener("click", ()=> {
     window.location.href = "homepage.html"; 
-  });
+});
 
 
 

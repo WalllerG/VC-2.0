@@ -132,7 +132,7 @@ body::before {
     height: 20px;
 }
 
-.container-desc3{
+#status{
     color: rgba(255, 255, 255, 0.6);
     font-size: 15px;
     line-height: 1.25rem;

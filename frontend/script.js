@@ -13,7 +13,6 @@ recognition.interimResults = false;
 recognition.maxAlternatives = 1;
 
 const startBtn = document.querySelector('.primary-button');
-const descriptionElement = document.querySelector('.container-desc3');
 
 startBtn.addEventListener('click', ()=>{
     if(isListening) {
@@ -27,8 +26,20 @@ startBtn.addEventListener('click', ()=>{
 });
 
 
-recognition.onresult = (event) => {
-    const spokenText = event.results[0][0].transcript;
-    descriptionElement.innerHTML = `"${spokenText}"`;
-
-};
+recognition.onresult = async (event) => {
+    const text = event.results[0][0].transcript
+    console.log("You said:", text)
+    
+    // send to FastAPI
+    const response = await fetch("http://localhost:8000/create-event", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ text: text })
+    })
+  
+    const data = await response.json()
+    // show confirmation to user
+    document.getElementById("status").innerText = "Event created!"
+  }

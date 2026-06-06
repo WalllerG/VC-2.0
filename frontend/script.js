@@ -1,3 +1,11 @@
+const homeButton = document.getElementById("home-btn");
+
+homeButton.addEventListener('click', () => {
+   window.location.href = "homepage.html";
+});  
+
+// Added event listener to the home button to navigate back to homepage.html but MOVE IT LATER TO SCRIPT2.JS
+
 const speechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
 if (!speechRecognition) {

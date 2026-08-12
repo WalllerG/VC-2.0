@@ -10,6 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from pydantic import BaseModel
 from google.auth.transport.requests import Request as GoogleRequest
+from google.auth.exceptions import RefreshError
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
@@ -35,9 +36,25 @@ if not IS_HTTPS:
     os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"  # allow http for local dev only
 os.environ["OAUTHLIB_RELAX_TOKEN_SCOPE"] = "1"  # don't error if granted scopes differ
 
-SCOPES = ["https://www.googleapis.com/auth/calendar",
+CALENDAR_SCOPE = "https://www.googleapis.com/auth/calendar"
+SCOPES = [CALENDAR_SCOPE,
           "https://www.googleapis.com/auth/userinfo.email",
           "openid"]
+
+
+def granted_scopes(flow, creds):
+    """Scopes Google actually granted, which can be narrower than SCOPES.
+
+    The consent screen shows one checkbox per sensitive scope, so a user can
+    approve sign-in while declining calendar access. Google's token response is
+    the authoritative record of what came back.
+    """
+    scope = (flow.oauth2session.token or {}).get("scope")
+    if isinstance(scope, str):
+        return scope.split()
+    if isinstance(scope, (list, tuple)):
+        return list(scope)
+    return list(creds.scopes or [])
 
 app = FastAPI()
 
@@ -105,6 +122,12 @@ def callback(request: Request):
     )
     creds = flow.credentials
 
+    # Storing a token without calendar access just defers the failure to the
+    # first event the user speaks, where it surfaces as an opaque 403.
+    if CALENDAR_SCOPE not in granted_scopes(flow, creds):
+        request.session.clear()
+        return RedirectResponse(f"{FRONTEND_URL}/homepage.html?error=calendar_scope")
+
     import google.oauth2.id_token
     import google.auth.transport.requests
     id_info = google.oauth2.id_token.verify_oauth2_token(
@@ -114,12 +137,15 @@ def callback(request: Request):
     email = id_info["email"]
 
     db = Session()
-    user = db.query(User).filter_by(email=email).first()
-    if not user:
-        user = User(email=email)
-    user.token = creds.to_json()
-    db.add(user)
-    db.commit()
+    try:
+        user = db.query(User).filter_by(email=email).first()
+        if not user:
+            user = User(email=email)
+        user.token = creds.to_json()
+        db.add(user)
+        db.commit()
+    finally:
+        db.close()
 
     request.session["email"] = email
     return RedirectResponse(f"{FRONTEND_URL}/index.html")
@@ -129,11 +155,35 @@ def callback(request: Request):
 def create_event(request: Request, body: EventRequest):
     email = request.session.get("email")
     if not email:
-        return {"status": "error", "message": "Not logged in"}
+        return {"status": "error", "message": "Not logged in", "relogin": True}
 
     db = Session()
-    user = db.query(User).filter_by(email=email).first()
-    creds = Credentials.from_authorized_user_info(json.loads(user.token))
+    try:
+        user = db.query(User).filter_by(email=email).first()
+        # The signed session cookie outlives the users table whenever the database
+        # is reset (a fresh SQLite file after a redeploy, a wiped Postgres). Treat
+        # that as logged out instead of blowing up on user.token.
+        if not user or not user.token:
+            request.session.clear()
+            return {"status": "error",
+                    "message": "Session expired — please sign in again.",
+                    "relogin": True}
+
+        creds = Credentials.from_authorized_user_info(json.loads(user.token))
+        # Google access tokens expire after an hour. Refresh here and store the
+        # result so the next request starts from a valid token.
+        if not creds.valid and creds.refresh_token:
+            try:
+                creds.refresh(GoogleRequest())
+            except RefreshError:
+                request.session.clear()
+                return {"status": "error",
+                        "message": "Google access was revoked — please sign in again.",
+                        "relogin": True}
+            user.token = creds.to_json()
+            db.commit()
+    finally:
+        db.close()
 
     try:
         event_data = parse_speech_to_event(body.text)
@@ -145,14 +195,34 @@ def create_event(request: Request, body: EventRequest):
         event = service.events().insert(calendarId='primary', body=event_data).execute()
         return {"status": "created", "link": event.get('htmlLink')}
     except HttpError as error:
+        # A token issued before calendar access was granted still authenticates,
+        # it just can't write events.
+        if error.status_code == 403:
+            request.session.clear()
+            return {"status": "error",
+                    "message": "VoiceCal doesn't have calendar access — sign in again and allow it.",
+                    "relogin": True}
         return {"status": "error", "message": str(error)}
+    except (json.JSONDecodeError, IndexError, KeyError):
+        # Claude returned something that wasn't the event JSON we asked for.
+        return {"status": "error", "message": "Couldn't understand that — try again."}
 
 @app.get("/me")
 def get_user(request: Request):
     email = request.session.get("email")
     if not email:
         return {"loggedIn": False}
-    return {"loggedIn": True, "email": email}
+
+    # calendarAccess makes a partially-granted token visible before the user
+    # tries to speak an event.
+    db = Session()
+    try:
+        user = db.query(User).filter_by(email=email).first()
+        scopes = json.loads(user.token).get("scopes", []) if user and user.token else []
+    finally:
+        db.close()
+
+    return {"loggedIn": True, "email": email, "calendarAccess": CALENDAR_SCOPE in scopes}
 
 # Serve the frontend from this same app (single origin = no CORS/cookie headaches).
 # Mounted LAST so the API routes above take priority. html=True serves homepage.html

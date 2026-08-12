@@ -82,6 +82,10 @@ if (SpeechRecognition) {
             const data = await response.json();
             if (data.status === "created") {
                 setStatus("✅ Event created!");
+            } else if (data.relogin) {
+                // Cookie is still valid but the backend has no token for us.
+                setStatus(`⚠️ ${data.message}`);
+                setTimeout(() => { window.location.href = "homepage.html"; }, 2000);
             } else {
                 setStatus(`⚠️ ${data.message || "Could not create event"}`);
             }
@@ -102,6 +106,16 @@ window.onload = async () => {
     }
 
     // ---- Homepage (landing) ----
+    // /callback bounces back here when the user approves sign-in but declines
+    // the calendar permission.
+    const authError = document.getElementById("authError");
+    if (authError && new URLSearchParams(location.search).get("error") === "calendar_scope") {
+        authError.textContent =
+            "VoiceCal needs permission to add events to your Google Calendar. " +
+            "Try again and tick the calendar checkbox on the consent screen.";
+        authError.hidden = false;
+    }
+
     const loginButton = document.getElementById("loginButton");
     if (loginButton) {
         loginButton.onclick = () => {

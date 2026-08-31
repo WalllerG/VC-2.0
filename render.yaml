@@ -7,10 +7,11 @@ services:
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
     envVars:
-      # Pin Python to a stable release. Render defaults to the newest Python
-      # (3.14), whose ABI breaks the prebuilt psycopg2 wheel.
+      # Pin Python explicitly so builds don't drift when Render moves its
+      # default. 3.14 needs psycopg2-binary >= 2.9.11, which is the first
+      # release with cp314 wheels.
       - key: PYTHON_VERSION
-        value: 3.12.8
+        value: 3.14.7
       # FRONTEND_URL = "" means "redirect to this same site" after login.
       - key: FRONTEND_URL
         value: ""

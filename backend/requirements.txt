@@ -6,6 +6,7 @@ pydantic==2.13.4
 SQLAlchemy==2.0.50
 psycopg2-binary==2.9.10
 python-dotenv==1.0.1
+tzdata==2025.2
 anthropic==0.106.0
 google-api-python-client==2.197.0
 google-auth==2.53.0

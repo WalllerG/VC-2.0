@@ -4,7 +4,7 @@ import os.path
 import secrets
 import hashlib
 import base64
-from vcparser import parse_speech_to_event
+from vcparser import parse_speech_to_event, DEFAULT_TIMEZONE
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
@@ -55,6 +55,18 @@ def granted_scopes(flow, creds):
     if isinstance(scope, (list, tuple)):
         return list(scope)
     return list(creds.scopes or [])
+
+def calendar_timezone(service):
+    """The timezone the user's Google Calendar is set to, or None.
+
+    "Tomorrow at 9" has to be resolved in the user's timezone, not the server's,
+    and the calendar itself is the authority on which one that is.
+    """
+    try:
+        return service.settings().get(setting="timezone").execute().get("value")
+    except HttpError:
+        return None
+
 
 app = FastAPI()
 
@@ -186,12 +198,20 @@ def create_event(request: Request, body: EventRequest):
         db.close()
 
     try:
-        event_data = parse_speech_to_event(body.text)
+        service = build("calendar", "v3", credentials=creds)
+
+        # Looked up once per session — it only changes if the user changes it in
+        # Google Calendar, and re-reading it on every utterance costs a round trip.
+        timezone = request.session.get("timezone")
+        if not timezone:
+            timezone = calendar_timezone(service) or DEFAULT_TIMEZONE
+            request.session["timezone"] = timezone
+
+        event_data = parse_speech_to_event(body.text, timezone)
         # The parser flags speech that isn't about scheduling so don't create
         # junk calendar events from small talk or unrelated comments.
         if event_data.get("not_event"):
             return {"status": "ignored", "message": "That didn't sound like an event."}
-        service = build("calendar", "v3", credentials=creds)
         event = service.events().insert(calendarId='primary', body=event_data).execute()
         return {"status": "created", "link": event.get('htmlLink')}
     except HttpError as error:

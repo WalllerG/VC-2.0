@@ -4,7 +4,7 @@ import os.path
 import secrets
 import hashlib
 import base64
-from vcparser import parse_speech_to_event, DEFAULT_TIMEZONE
+from vcparser import parse_speech_to_event, ConfigError, DEFAULT_TIMEZONE
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
@@ -223,6 +223,10 @@ def create_event(request: Request, body: EventRequest):
                     "message": "VoiceCal doesn't have calendar access — sign in again and allow it.",
                     "relogin": True}
         return {"status": "error", "message": str(error)}
+    except ConfigError as error:
+        # Server-side misconfiguration: say so in the logs, don't blame the user.
+        print(f"CONFIG ERROR: {error}", flush=True)
+        return {"status": "error", "message": "VoiceCal is misconfigured — check the server logs."}
     except (json.JSONDecodeError, IndexError, KeyError):
         # Claude returned something that wasn't the event JSON we asked for.
         return {"status": "error", "message": "Couldn't understand that — try again."}

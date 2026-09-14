@@ -1,42 +1,38 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VoiceCal</title>
-    <link rel="stylesheet" href="shared.css">
-    <link rel="stylesheet" href="styles2.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VoiceCal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app.css">
 </head>
 <body>
 
-    <div class="top-bar">
-        <button id="homepage" class="top-bar-btn">Home</button>
-        <button id="voicepage" class="top-bar-btn">Voice</button>
+<main class="landing">
+    <div class="landing__card">
+        <p class="landing__eyebrow">Voice and text · Google Calendar</p>
+        <h1 class="landing__title">Say it once.<br>It's on your <span>calendar</span>.</h1>
+        <p class="landing__body">
+            Describe what you need scheduled the way you'd say it to a person.
+            VoiceCal works out the dates, creates the events, and asks before it
+            removes anything.
+        </p>
+
+        <ul class="samples">
+            <li><b>you say</b><span>Gym every Monday at 7 for a month</span></li>
+            <li><b>you say</b><span>Dentist Tuesday 3pm and haircut Thursday 5pm</span></li>
+            <li><b>you say</b><span>Cancel my dentist appointment</span></li>
+        </ul>
+
+        <button class="cta" id="loginButton" type="button">Sign in with Google</button>
+
+        <p class="notice" id="authError" hidden></p>
     </div>
+</main>
 
-
-    <div class="main-container">
-
-        <div class="intro-container">
-
-            <p class="intro-welcome">Welcome To</p>
-            <h1 class="container-title">VoiceCal</h1>
-
-            <p class="container-desc">
-                Let's face it; if you want to organize your schedule, 
-                you might as well genuinely go to outer space 
-                and not hover kind of on the edge of it. 
-                Well sit back, and relax because we'll give you a 
-                truly out of this world experience!</p>
-
-            <button id="loginButton">Get Started</button>
-
-            <p id="authError" class="auth-error" hidden></p>
-        </div>
-
-    </div>
-
-    <script src="script.js"></script>
+<script src="script.js"></script>
 </body>
 </html>
-

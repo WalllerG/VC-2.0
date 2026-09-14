@@ -1,0 +1,442 @@
+/* VoiceCal — a day-planner page you can talk to.
+   The conversation is ruled like an agenda: a mono time gutter down the left,
+   hairlines between entries, and a continuous spine at the gutter edge. */
+
+:root {
+    --ink: #16202A;
+    --ink-soft: #5A6B7B;
+    --paper: #EDF0F3;
+    --surface: #FFFFFF;
+    --rule: #DBE1E8;
+    --accent: #0B5D51;
+    --accent-wash: #E6EFED;
+    --alert: #9F1239;
+    --alert-wash: #FBE9EE;
+
+    --gutter: 4.75rem;
+    --page: 46rem;
+    --radius: 6px;
+
+    --font-ui: "Space Grotesk", "Segoe UI", system-ui, -apple-system, sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+    height: 100%;
+    margin: 0;
+}
+
+body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-ui);
+    font-size: 16px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+}
+
+button { font: inherit; color: inherit; cursor: pointer; }
+
+:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 3px;
+}
+
+/* ---------- Masthead ---------- */
+
+.masthead {
+    border-bottom: 1px solid var(--rule);
+    background: var(--surface);
+}
+
+.masthead__inner {
+    max-width: var(--page);
+    margin: 0 auto;
+    padding: 0.875rem 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.wordmark {
+    font-size: 1.0625rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin: 0;
+}
+
+.wordmark span { color: var(--accent); }
+
+.masthead__spacer { flex: 1; }
+
+.masthead__email {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--ink-soft);
+}
+
+.linkout {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--accent);
+    background: none;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    padding: 0.375rem 0.75rem;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.linkout:hover { border-color: var(--accent); background: var(--accent-wash); }
+
+/* ---------- The planner page ---------- */
+
+.page {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.log-scroll {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.log {
+    position: relative;
+    max-width: var(--page);
+    margin: 0 auto;
+    padding: 0 1.25rem 1.5rem;
+}
+
+/* The spine: one continuous rule at the gutter edge, the way a planner page
+   has a printed margin line. */
+.log::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: calc(1.25rem + var(--gutter));
+    width: 1px;
+    background: var(--rule);
+}
+
+.entry {
+    display: grid;
+    grid-template-columns: var(--gutter) 1fr;
+    gap: 0 1.25rem;
+    padding: 1rem 0;
+    border-top: 1px solid var(--rule);
+    animation: settle 0.22s ease-out;
+}
+
+.entry:first-child { border-top: none; }
+
+@keyframes settle {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: none; }
+}
+
+.entry__time {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    color: var(--ink-soft);
+    letter-spacing: 0.04em;
+    padding-top: 0.2rem;
+    text-align: right;
+}
+
+.entry__body { min-width: 0; }
+
+.entry__who {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin: 0 0 0.25rem;
+}
+
+.entry--you .entry__who { color: var(--ink); }
+
+.entry__text { margin: 0; overflow-wrap: anywhere; }
+
+.entry--pending .entry__text { color: var(--ink-soft); }
+
+/* ---------- Event cards ---------- */
+
+.events { margin: 0.625rem 0 0; padding: 0; list-style: none; }
+
+.event {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--accent);
+    border-radius: var(--radius);
+    padding: 0.625rem 0.75rem;
+    margin-bottom: 0.375rem;
+}
+
+.event__title { font-weight: 500; }
+
+.event__meta {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--ink-soft);
+    margin-top: 0.125rem;
+}
+
+.event__repeat {
+    display: inline-block;
+    font-family: var(--font-ui);
+    font-size: 0.625rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: var(--accent-wash);
+    border-radius: 3px;
+    padding: 0.0625rem 0.3125rem;
+    margin-left: 0.4375rem;
+    vertical-align: 1px;
+}
+
+.event__link {
+    font-size: 0.75rem;
+    color: var(--accent);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+}
+
+.event__link:hover { border-bottom-color: currentColor; }
+
+/* ---------- Delete confirmation ---------- */
+
+.confirm {
+    background: var(--alert-wash);
+    border: 1px solid var(--alert);
+    border-radius: var(--radius);
+    padding: 0.875rem;
+    margin-top: 0.625rem;
+}
+
+.confirm__summary { margin: 0 0 0.75rem; font-weight: 500; }
+
+.confirm__actions { display: flex; gap: 0.5rem; }
+
+.btn {
+    border-radius: var(--radius);
+    border: 1px solid var(--rule);
+    background: var(--surface);
+    padding: 0.4375rem 0.875rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.btn:hover { border-color: var(--ink-soft); }
+
+.btn--danger {
+    background: var(--alert);
+    border-color: var(--alert);
+    color: #fff;
+}
+
+.btn--danger:hover { filter: brightness(1.12); border-color: var(--alert); }
+
+.btn[disabled] { opacity: 0.45; cursor: default; }
+
+/* ---------- Empty state ---------- */
+
+.opener { padding: 3rem 0 1.5rem; }
+
+.opener__lead {
+    font-size: 1.375rem;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    margin: 0 0 0.375rem;
+    max-width: 24ch;
+}
+
+.opener__sub { color: var(--ink-soft); margin: 0 0 1.25rem; }
+
+.suggestions { display: flex; flex-wrap: wrap; gap: 0.4375rem; }
+
+.suggestion {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 100px;
+    padding: 0.375rem 0.8125rem;
+    font-size: 0.8125rem;
+    color: var(--ink-soft);
+    text-align: left;
+}
+
+.suggestion:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ---------- Composer ---------- */
+
+.composer-bar {
+    border-top: 1px solid var(--rule);
+    background: var(--surface);
+}
+
+.composer {
+    max-width: var(--page);
+    margin: 0 auto;
+    padding: 0.75rem 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.composer__input {
+    flex: 1;
+    min-width: 0;
+    font: inherit;
+    color: var(--ink);
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: 100px;
+    padding: 0.625rem 1rem;
+}
+
+.composer__input::placeholder { color: var(--ink-soft); }
+.composer__input:focus { outline: none; border-color: var(--accent); background: var(--surface); }
+
+.icon-btn {
+    flex: none;
+    width: 2.625rem;
+    height: 2.625rem;
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--rule);
+    border-radius: 50%;
+    background: var(--surface);
+    color: var(--ink);
+}
+
+.icon-btn:hover:not([disabled]) { border-color: var(--accent); color: var(--accent); }
+.icon-btn[disabled] { opacity: 0.4; cursor: default; }
+.icon-btn svg { width: 1.125rem; height: 1.125rem; }
+
+.icon-btn--send { background: var(--accent); border-color: var(--accent); color: #fff; }
+.icon-btn--send:hover:not([disabled]) { filter: brightness(1.15); color: #fff; }
+
+/* Listening: the one place the interface moves on its own. */
+.icon-btn--mic.listening {
+    background: var(--alert);
+    border-color: var(--alert);
+    color: #fff;
+    animation: listening 1.4s ease-in-out infinite;
+}
+
+@keyframes listening {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(159, 18, 57, 0.35); }
+    50%      { box-shadow: 0 0 0 7px rgba(159, 18, 57, 0); }
+}
+
+.composer__hint {
+    max-width: var(--page);
+    margin: 0 auto;
+    padding: 0 1.25rem 0.75rem;
+    font-size: 0.75rem;
+    color: var(--ink-soft);
+    min-height: 1.1em;
+}
+
+/* ---------- Landing ---------- */
+
+.landing {
+    min-height: 100%;
+    display: grid;
+    place-items: center;
+    padding: 2rem 1.25rem;
+}
+
+.landing__card { max-width: 34rem; width: 100%; }
+
+.landing__eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin: 0 0 0.875rem;
+}
+
+.landing__title {
+    font-size: clamp(2.25rem, 7vw, 3.5rem);
+    font-weight: 700;
+    letter-spacing: -0.035em;
+    line-height: 1.04;
+    margin: 0 0 1rem;
+}
+
+.landing__title span { color: var(--accent); }
+
+.landing__body { font-size: 1.0625rem; color: var(--ink-soft); margin: 0 0 1.75rem; max-width: 40ch; }
+
+/* Sample lines, ruled like the log they'll appear in. */
+.samples {
+    border-top: 1px solid var(--rule);
+    margin: 0 0 1.75rem;
+    padding: 0;
+    list-style: none;
+}
+
+.samples li {
+    display: grid;
+    grid-template-columns: var(--gutter) 1fr;
+    gap: 1.25rem;
+    border-bottom: 1px solid var(--rule);
+    padding: 0.625rem 0;
+}
+
+.samples b {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-weight: 400;
+    color: var(--ink-soft);
+    letter-spacing: 0.04em;
+    text-align: right;
+}
+
+.cta {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 100px;
+    padding: 0.8125rem 1.75rem;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.cta:hover { filter: brightness(1.15); }
+
+.notice {
+    margin: 1.25rem 0 0;
+    padding: 0.75rem 0.875rem;
+    background: var(--alert-wash);
+    border: 1px solid var(--alert);
+    border-radius: var(--radius);
+    font-size: 0.875rem;
+}
+
+[hidden] { display: none !important; }
+
+/* ---------- Narrow screens ---------- */
+
+@media (max-width: 34rem) {
+    :root { --gutter: 3.25rem; }
+    .log::before { left: calc(1rem + var(--gutter)); }
+    .log, .composer, .composer__hint, .masthead__inner { padding-left: 1rem; padding-right: 1rem; }
+    .entry { gap: 0 0.875rem; }
+    .samples li { gap: 0.875rem; }
+    .masthead__email { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+}

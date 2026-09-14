@@ -4,7 +4,10 @@ import os.path
 import secrets
 import hashlib
 import base64
-from vcparser import parse_speech_to_event, ConfigError, DEFAULT_TIMEZONE
+import anthropic
+
+import agent
+from vcparser import ConfigError, DEFAULT_TIMEZONE
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
@@ -84,8 +87,12 @@ app.add_middleware(
     allow_credentials=True,
 )
 
-class EventRequest(BaseModel):
+class CommandRequest(BaseModel):
     text: str
+
+
+class ConfirmRequest(BaseModel):
+    accept: bool
 
 # frontend redirects user here to start login
 @app.get("/login")
@@ -162,24 +169,31 @@ def callback(request: Request):
     request.session["email"] = email
     return RedirectResponse(f"{FRONTEND_URL}/index.html")
 
-# create event for logged in user
-@app.post("/create-event")
-def create_event(request: Request, body: EventRequest):
+NOT_SIGNED_IN = {"status": "error", "message": "Not signed in", "relogin": True}
+
+
+def calendar_context(request):
+    """(service, timezone, None) for a signed-in user, else (None, None, error).
+
+    Refreshing the Google token, catching the cases where the session outlives
+    the stored credentials, and reading the calendar timezone are all needed by
+    every calendar route, so they live here rather than in each one.
+    """
     email = request.session.get("email")
     if not email:
-        return {"status": "error", "message": "Not logged in", "relogin": True}
+        return None, None, NOT_SIGNED_IN
 
     db = Session()
     try:
         user = db.query(User).filter_by(email=email).first()
         # The signed session cookie outlives the users table whenever the database
         # is reset (a fresh SQLite file after a redeploy, a wiped Postgres). Treat
-        # that as logged out instead of blowing up on user.token.
+        # that as signed out instead of blowing up on user.token.
         if not user or not user.token:
             request.session.clear()
-            return {"status": "error",
-                    "message": "Session expired — please sign in again.",
-                    "relogin": True}
+            return None, None, {"status": "error",
+                                "message": "Session expired — sign in again.",
+                                "relogin": True}
 
         creds = Credentials.from_authorized_user_info(json.loads(user.token))
         # Google access tokens expire after an hour. Refresh here and store the
@@ -189,47 +203,112 @@ def create_event(request: Request, body: EventRequest):
                 creds.refresh(GoogleRequest())
             except RefreshError:
                 request.session.clear()
-                return {"status": "error",
-                        "message": "Google access was revoked — please sign in again.",
-                        "relogin": True}
+                return None, None, {"status": "error",
+                                    "message": "Google access was revoked — sign in again.",
+                                    "relogin": True}
             user.token = creds.to_json()
             db.commit()
     finally:
         db.close()
 
+    service = build("calendar", "v3", credentials=creds)
+
+    # Looked up once per session — it only changes if the user changes it in
+    # Google Calendar, and re-reading it on every request costs a round trip.
+    timezone = request.session.get("timezone")
+    if not timezone:
+        timezone = calendar_timezone(service) or DEFAULT_TIMEZONE
+        request.session["timezone"] = timezone
+
+    return service, timezone, None
+
+
+def calendar_error(request, error):
+    """Turn a Google API failure into something the user can act on."""
+    # A token issued before calendar access was granted still authenticates, it
+    # just cannot read or write events.
+    if getattr(error, "status_code", None) == 403:
+        request.session.clear()
+        return {"status": "error",
+                "message": "VoiceCal doesn't have calendar access — sign in again and allow it.",
+                "relogin": True}
+    print(f"CALENDAR ERROR: {error}", flush=True)
+    return {"status": "error", "message": "Google Calendar rejected that request."}
+
+
+@app.post("/command")
+def command(request: Request, body: CommandRequest):
+    """One spoken or typed instruction. Same path for both."""
+    text = (body.text or "").strip()
+    if not text:
+        return {"status": "error", "message": "Say or type something first."}
+
+    service, timezone, error = calendar_context(request)
+    if error:
+        return error
+
     try:
-        service = build("calendar", "v3", credentials=creds)
-
-        # Looked up once per session — it only changes if the user changes it in
-        # Google Calendar, and re-reading it on every utterance costs a round trip.
-        timezone = request.session.get("timezone")
-        if not timezone:
-            timezone = calendar_timezone(service) or DEFAULT_TIMEZONE
-            request.session["timezone"] = timezone
-
-        event_data = parse_speech_to_event(body.text, timezone)
-        # The parser flags speech that isn't about scheduling so don't create
-        # junk calendar events from small talk or unrelated comments.
-        if event_data.get("not_event"):
-            return {"status": "ignored", "message": "That didn't sound like an event."}
-        event = service.events().insert(calendarId='primary', body=event_data).execute()
-        return {"status": "created", "link": event.get('htmlLink')}
-    except HttpError as error:
-        # A token issued before calendar access was granted still authenticates,
-        # it just can't write events.
-        if error.status_code == 403:
-            request.session.clear()
-            return {"status": "error",
-                    "message": "VoiceCal doesn't have calendar access — sign in again and allow it.",
-                    "relogin": True}
-        return {"status": "error", "message": str(error)}
-    except ConfigError as error:
+        result = agent.run_command(agent.make_client(), service, text, timezone)
+    except HttpError as exc:
+        return calendar_error(request, exc)
+    except ConfigError as exc:
         # Server-side misconfiguration: say so in the logs, don't blame the user.
-        print(f"CONFIG ERROR: {error}", flush=True)
+        print(f"CONFIG ERROR: {exc}", flush=True)
         return {"status": "error", "message": "VoiceCal is misconfigured — check the server logs."}
-    except (json.JSONDecodeError, IndexError, KeyError):
-        # Claude returned something that wasn't the event JSON we asked for.
-        return {"status": "error", "message": "Couldn't understand that — try again."}
+    except anthropic.APIError as exc:
+        print(f"ANTHROPIC ERROR: {exc}", flush=True)
+        return {"status": "error", "message": "Couldn't reach the assistant — try again."}
+
+    pending = result["pending_delete"]
+    if pending:
+        # Parked in the session, not sent to the browser as something it can
+        # edit: the ids the user approves have to be the ids the model proposed.
+        request.session["pending_delete"] = pending
+        return {"status": "confirm",
+                "message": result["reply"] or "",
+                "confirm": {"summary": pending["summary"],
+                            "count": len(pending["event_ids"]),
+                            "scope": pending["scope"]},
+                "created": result["created"]}
+
+    request.session.pop("pending_delete", None)
+    return {"status": "ok", "message": result["reply"], "created": result["created"]}
+
+
+@app.post("/confirm")
+def confirm(request: Request, body: ConfirmRequest):
+    """Approve or discard the delete proposed by the previous /command."""
+    pending = request.session.get("pending_delete")
+    if not pending:
+        return {"status": "error", "message": "That confirmation has expired — ask again."}
+
+    # Cleared either way, so a stale proposal can never be replayed.
+    request.session.pop("pending_delete", None)
+
+    if not body.accept:
+        return {"status": "ok", "message": "Left your calendar as it is.", "created": []}
+
+    service, timezone, error = calendar_context(request)
+    if error:
+        return error
+
+    try:
+        outcome = agent.confirm_delete(service, pending)
+    except HttpError as exc:
+        return calendar_error(request, exc)
+
+    removed = len(outcome["deleted"])
+    if outcome["failed"]:
+        print(f"DELETE FAILURES: {outcome['failed']}", flush=True)
+        return {"status": "error",
+                "message": f"Removed {removed}, but some couldn't be deleted.",
+                "created": []}
+    if not removed and outcome["missing"]:
+        return {"status": "ok", "message": "Those were already gone.", "created": []}
+
+    noun = "event" if removed == 1 else "events"
+    return {"status": "ok", "message": f"Deleted {removed} {noun}.", "created": []}
+
 
 @app.get("/me")
 def get_user(request: Request):

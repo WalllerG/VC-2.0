@@ -1,39 +1,66 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VoiceCal</title>
-    <link rel="stylesheet" href="shared.css">
-    <link rel="stylesheet" href="styles.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VoiceCal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app.css">
 </head>
 <body>
 
-    <div class="top-bar">
-        <button id="homepage" class="top-bar-btn">Home</button>
-        <button id="voicepage" class="top-bar-btn">Voice</button>
-    </div>
+<div class="page">
 
-    <div class="main-container">
-        <h1 class="container-title">Voice Control</h1>
-        <p class="container-desc">Manage your calendar hands-free</p>
-
-        <button class="primary-button" id="micButton">
-            <img src="components/microphone.png" alt="Microphone Icon" class="button-icon">
-        </button>
-
-        <p class="container-desc2">Tap to speak &middot; tap again to stop</p>
-
-        <div class="speech-container">
-            <p id="status">Ready when you are</p>
+    <header class="masthead">
+        <div class="masthead__inner">
+            <p class="wordmark">Voice<span>Cal</span></p>
+            <div class="masthead__spacer"></div>
+            <span class="masthead__email" id="userEmail"></span>
+            <a class="linkout" href="https://calendar.google.com" target="_blank" rel="noopener">Open calendar</a>
         </div>
+    </header>
 
-        <button id="calendarButton" class="calendar-button">
-            <span class="calendar-dot"></span>
-            Open Google Calendar
-        </button>
+    <div class="log-scroll" id="logScroll">
+        <div class="log" id="log">
+            <div class="opener" id="opener">
+                <p class="opener__lead">Tell VoiceCal what belongs on your calendar.</p>
+                <p class="opener__sub">Type it or tap the mic — both go the same place.</p>
+                <div class="suggestions" id="suggestions">
+                    <button class="suggestion" type="button">Lunch with Sarah Friday at noon</button>
+                    <button class="suggestion" type="button">Gym every Monday at 7am for a month</button>
+                    <button class="suggestion" type="button">Dentist Tuesday 3pm and haircut Thursday 5pm</button>
+                    <button class="suggestion" type="button">What's on my calendar this week?</button>
+                    <button class="suggestion" type="button">Cancel my dentist appointment</button>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <script src="script.js"></script>
+    <div class="composer-bar">
+        <form class="composer" id="composer">
+            <button type="button" class="icon-btn icon-btn--mic" id="micButton" aria-label="Start voice input" title="Start voice input">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+                    <rect x="9" y="2" width="6" height="12" rx="3"></rect>
+                    <path d="M5 11a7 7 0 0 0 14 0"></path>
+                    <path d="M12 18v4"></path>
+                </svg>
+            </button>
+            <input class="composer__input" id="commandInput" type="text" autocomplete="off"
+                   placeholder="Type or tap the mic…" aria-label="Your calendar request">
+            <button type="submit" class="icon-btn icon-btn--send" id="sendButton" aria-label="Send request" title="Send">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M12 19V5"></path>
+                    <path d="M5 12l7-7 7 7"></path>
+                </svg>
+            </button>
+        </form>
+        <p class="composer__hint" id="hint" role="status" aria-live="polite"></p>
+    </div>
+
+</div>
+
+<script src="script.js"></script>
 </body>
 </html>

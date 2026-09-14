@@ -247,7 +247,13 @@ def run_command(client, service, text: str, tz_name: str, now=None) -> dict:
                         "summary": block.input.get("summary") or "these events",
                         "scope": block.input.get("scope") or "this_event",
                     }
-                result = {"status": "awaiting user confirmation"}
+                    result = {"status": "awaiting user confirmation"}
+                else:
+                    # Saying "awaiting confirmation" here would be a lie the model
+                    # would repeat to the user. Tell it there is nothing to delete
+                    # so it can search again or report that nothing matched.
+                    result = {"error": "no event ids supplied; call search_events "
+                                       "first and pass ids it returned"}
 
             else:
                 result = {"error": f"unknown tool {block.name}"}

@@ -134,9 +134,16 @@ def test_delete_with_no_ids_does_not_produce_a_proposal(service):
         calls(tool_block("delete_events", {
             "event_ids": [], "summary": "nothing", "scope": "this_event",
         })),
+        says("I couldn't find that on your calendar."),
     )
     result = run(client, service, "cancel my imaginary meeting")
+
     assert result["pending_delete"] is None
+    assert service.deleted == []
+    # The model is told the call was empty so it can recover, not that a
+    # confirmation is pending when none is.
+    payload = json.loads(client.requests[1]["messages"][-1]["content"][0]["content"])
+    assert "no event ids" in payload["error"]
 
 
 def test_confirming_a_proposal_is_what_actually_deletes(service):

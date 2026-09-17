@@ -113,8 +113,9 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 
 /* The spine: one continuous rule at the gutter edge, the way a planner page
-   has a printed margin line. */
-.log::before {
+   has a printed margin line. Only drawn once there are entries to rule —
+   against an empty page it is just a stray line through the heading. */
+.log--ruled::before {
     content: "";
     position: absolute;
     top: 0;
@@ -430,7 +431,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
 @media (max-width: 34rem) {
     :root { --gutter: 3.25rem; }
-    .log::before { left: calc(1rem + var(--gutter)); }
+    .log--ruled::before { left: calc(1rem + var(--gutter)); }
     .log, .composer, .composer__hint, .masthead__inner { padding-left: 1rem; padding-right: 1rem; }
     .entry { gap: 0 0.875rem; }
     .samples li { gap: 0.875rem; }

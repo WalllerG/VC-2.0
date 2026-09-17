@@ -56,6 +56,8 @@ function formatWhen(iso) {
 
 function addEntry(who, text, modifier) {
     if (opener) opener.hidden = true;
+    // The gutter rule only makes sense once something is written in the gutter.
+    log.classList.add("log--ruled");
 
     const entry = el("div", `entry entry--${modifier || who.toLowerCase()}`);
     entry.append(el("time", "entry__time", clockStamp()));
